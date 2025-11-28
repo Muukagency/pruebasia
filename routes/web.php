@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::post('/reservar', [LandingController::class, 'book'])->name('landing.book');
+Route::get('/gracias', [LandingController::class, 'thankyou'])->name('landing.thankyou');
 
 Route::post('/webhooks/meta', [WebhookController::class, 'meta']);
 Route::post('/webhooks/google', [WebhookController::class, 'google']);

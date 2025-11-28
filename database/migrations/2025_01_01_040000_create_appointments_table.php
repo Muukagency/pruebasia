@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('scheduled_time');
             $table->string('channel')->default('web');
             $table->string('status')->default('reservado');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

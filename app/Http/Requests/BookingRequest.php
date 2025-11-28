@@ -19,6 +19,8 @@ class BookingRequest extends FormRequest
             'scheduled_date' => 'required|date',
             'scheduled_time' => 'required',
             'whatsapp' => 'required|string|max:30',
+            'email' => 'nullable|email|max:255',
+            'notes' => 'nullable|string|max:500',
         ];
     }
 }

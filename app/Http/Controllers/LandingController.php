@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Client;
 use App\Models\Service;
 use App\Models\Setting;
+use App\Models\WorkingHour;
 use App\Services\PaymentService;
 use App\Services\WhatsAppService;
 use Carbon\Carbon;
@@ -18,10 +19,14 @@ class LandingController extends Controller
     {
         $services = Service::where('is_active', true)->get();
         $settings = Setting::pluck('value', 'key');
+        $workingHours = WorkingHour::all();
+        $appointments = Appointment::select('scheduled_date', 'scheduled_time', 'service_id')->whereDate('scheduled_date', '>=', Carbon::today())->get();
 
         return view('landing', [
             'services' => $services,
             'settings' => $settings,
+            'workingHours' => $workingHours,
+            'appointments' => $appointments,
         ]);
     }
 
@@ -45,6 +50,7 @@ class LandingController extends Controller
                 'scheduled_time' => $request->scheduled_time,
                 'channel' => 'web',
                 'status' => 'reservado',
+                'notes' => $request->input('notes'),
             ]);
 
             $paymentLink = $paymentService->createPaymentLink($appointment);
@@ -52,10 +58,27 @@ class LandingController extends Controller
             $whatsAppService->sendConfirmation($client, $appointment, $paymentLink);
             $whatsAppService->scheduleReminder($client, $appointment);
 
-            return redirect()->back()->with([
-                'success' => 'Reserva creada correctamente. Hemos enviado la confirmación por WhatsApp.',
+            return redirect()->route('landing.thankyou')->with([
+                'booking_status' => 'Reserva creada correctamente. Hemos enviado la confirmación por WhatsApp.',
                 'payment_link' => $paymentLink,
+                'client_whatsapp' => $client->whatsapp,
             ]);
         });
+    }
+
+    public function thankyou()
+    {
+        if (!session('booking_status')) {
+            return redirect()->route('landing');
+        }
+
+        $settings = Setting::pluck('value', 'key');
+
+        return view('thankyou', [
+            'settings' => $settings,
+            'payment_link' => session('payment_link'),
+            'message' => session('booking_status'),
+            'client_whatsapp' => session('client_whatsapp'),
+        ]);
     }
 }
